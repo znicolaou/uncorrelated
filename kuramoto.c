@@ -297,7 +297,6 @@ int main (int argc, char* argv[]) {
         }
       }
     }
-    // gsl_odeiv2_step_reset(step);
     netnoiseintensity += params.noiseintensity;
 
     if (t>=to) {
