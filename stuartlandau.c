@@ -240,17 +240,14 @@ int main (int argc, char* argv[]) {
   strcpy(file,filebase);
   strcat(file, ".dat");
   outsignal=fopen(file,"w");
-  if(verbose) {
-    strcpy(file,filebase);
-    strcat(file, ".out");
-    out=fopen(file,"w");
-    fprintf(out, "%i %f %f %f %f\n", N, tmax, dt, sigma, C);
-
-    fprintf(out, "\n");
+  strcpy(file,filebase);
+  strcat(file, ".out");
+  out=fopen(file,"w");
+  fprintf(out, "%i %f %f %f %f\n", N, tmax, dt, sigma, C);
+  for(int i=0; i<argc; i++){
+    fprintf(out,"%s ",argv[i]);
   }
-  fflush(stdout);
-
-
+  fprintf(out,"\n");
   //Set up integrator
   gsl_odeiv2_system sys = {func, NULL, 2*N, &params};
   gsl_odeiv2_step * step;
@@ -350,7 +347,7 @@ int main (int argc, char* argv[]) {
   //Output results
   fflush(outsignal);
   fclose(outsignal);
-  fprintf(out, "\nruntime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));  
+  fprintf(out, "\nruntime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
   fprintf(out, "%i %f %f %i %f %f\n", N, C, sigma, seed, order/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
   fflush(out);
   fclose(out);

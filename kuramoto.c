@@ -219,19 +219,14 @@ int main (int argc, char* argv[]) {
   strcpy(file,filebase);
   strcat(file, ".dat");
   outsignal=fopen(file,"w");
-
-  if(verbose){
-
-    strcpy(file,filebase);
-    strcat(file, ".out");
-    out=fopen(file,"w");
-
-    fprintf(out, "%i %f %f %f %f\n", N, tmax-ta, dt, sigma, C);
-
-    fprintf(out, "\n");
+  strcpy(file,filebase);
+  strcat(file, ".out");
+  out=fopen(file,"w");
+  fprintf(out, "%i %f %f %f %f\n", N, tmax-ta, dt, sigma, C);
+  for(int i=0; i<argc; i++){
+    fprintf(out,"%s ",argv[i]);
   }
-  fflush(stdout);
-
+  fprintf(out,"\n");
   //Set up integrator
   gsl_odeiv2_system sys = {func, NULL, N, &params};
   gsl_odeiv2_step * step;
