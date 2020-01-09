@@ -197,7 +197,7 @@ int main (int argc, char* argv[]) {
   double *omega, *y, *yerr, *noise;
   gsl_rng *r = gsl_rng_alloc(gsl_rng_default);
 
-  FILE *out, *outsignal, *outnoise, *outfrequencies;
+  FILE *out, *outsignal, *outfrequencies;
   char file[256];
 
   omega = calloc(2+N, sizeof(double));
@@ -216,22 +216,16 @@ int main (int argc, char* argv[]) {
   omega[1]=0.5;
 
   //open outputs
+  strcpy(file,filebase);
+  strcat(file, ".dat");
+  outsignal=fopen(file,"w");
+  strcpy(file,filebase);
+  strcat(file, "frequencies.dat");
+  outfrequencies=fopen(file,"w");
   if(verbose){
-    strcpy(file,filebase);
-    strcat(file, "noise.dat");
-    outnoise=fopen(file,"w");
-
     strcpy(file,filebase);
     strcat(file, ".out");
     out=fopen(file,"w");
-
-    strcpy(file,filebase);
-    strcat(file, ".dat");
-    outsignal=fopen(file,"w");
-
-    strcpy(file,filebase);
-    strcat(file, "frequencies.dat");
-    outfrequencies=fopen(file,"w");
 
     fprintf(out, "%i %f %f %f %f %f\n", N, tmax-ta, dt, sigma, C, K);
 
@@ -243,8 +237,8 @@ int main (int argc, char* argv[]) {
     fprintf(outfrequencies, "%f ", omega[j]);
   }
   fflush(outfrequencies);
-
-
+  fclose(outfrequencies);
+  
   //Set up integrator
   gsl_odeiv2_system sys = {func, NULL, 2+N, &params};
   gsl_odeiv2_step * step;
@@ -316,13 +310,11 @@ int main (int argc, char* argv[]) {
         }
       }
     }
+    if(t>ta){
+      fwrite(y, sizeof(double), N+2, outsignal);
+      fflush(outsignal);
+    }
     if(verbose){
-      if(t>ta){
-        fwrite(noise,sizeof(double), 2, outnoise);
-        fflush(outnoise);
-        fwrite(y, sizeof(double), N+2, outsignal);
-        fflush(outsignal);
-      }
       gettimeofday(&end,NULL);
       printf("%6f\t%6f\t%6f\t%6e\t\r",t/tmax,end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec), (end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec))/(t/tmax)*(1-t/tmax), maxerr);
       fprintf(out, "%f\t%f\t%f\t%6e\t\n",t/tmax,end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec), (end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec))/(t/tmax)*(1-t/tmax), maxerr);
@@ -334,15 +326,12 @@ int main (int argc, char* argv[]) {
   printf("runtime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
 
   //Output results
+  fflush(outsignal);
+  fclose(outsignal);
 
   if(verbose){
-    fflush(outsignal);
-    fflush(outnoise);
     fflush(out);
-    fclose(outsignal);
-    fclose(outnoise);
     fclose(out);
-    fclose(outfrequencies);
 
     printf("%f %f %f \n", order1/(Nt-Nto), order2/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
   }

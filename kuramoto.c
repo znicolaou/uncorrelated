@@ -73,7 +73,7 @@ int main (int argc, char* argv[]) {
   int correlated = 0;
   double t = 0.;
   double tmax = 1e3;
-  double ta = 0;
+  double ta = 5e2;
   double to = 5e2;
   double dt = 1e-2;
   double dt2 = 1e-3;
@@ -197,16 +197,15 @@ int main (int argc, char* argv[]) {
   double ti = dt;
   double order = 0;
   double netnoiseintensity = 0;
-  double *y, *yerr, *noise, *phase;
+  double *y, *yerr, *noise;
   gsl_rng *r = gsl_rng_alloc(gsl_rng_default);
 
-  FILE *out, *outsignal, *outphase, *outnoise;
+  FILE *out, *outsignal;
   char file[256];
 
   y=calloc(N,sizeof(double));
   yerr=calloc(N,sizeof(double));
   noise=calloc(N,sizeof(double));
-  phase=calloc(N,sizeof(double));
   struct parameters params={N, omega, C, noise, 0, noisetype};
 
   //create the random noise function.
@@ -217,24 +216,17 @@ int main (int argc, char* argv[]) {
   }
 
   //Output the noise data
+  strcpy(file,filebase);
+  strcat(file, ".dat");
+  outsignal=fopen(file,"w");
+
   if(verbose){
-    strcpy(file,filebase);
-    strcat(file, "noise.dat");
-    outnoise=fopen(file,"w");
 
     strcpy(file,filebase);
     strcat(file, ".out");
     out=fopen(file,"w");
 
-    strcpy(file,filebase);
-    strcat(file, "phase.dat");
-    outphase=fopen(file,"w");
-
-    strcpy(file,filebase);
-    strcat(file, ".dat");
-    outsignal=fopen(file,"w");
-
-    fprintf(out, "%i %f %f %f %f\n", N, tmax, dt, sigma, C);
+    fprintf(out, "%i %f %f %f %f\n", N, tmax-ta, dt, sigma, C);
 
     fprintf(out, "\n");
   }
@@ -307,15 +299,11 @@ int main (int argc, char* argv[]) {
       }
     }
 
+    if(t>ta){
+      fwrite(y, sizeof(double), N, outsignal);
+      fflush(outsignal);
+    }
     if(verbose){
-      if(t>ta){
-        fwrite(phase, sizeof(double), N, outphase);
-        fflush(outphase);
-        fwrite(noise,sizeof(double), N, outnoise);
-        fflush(outnoise);
-        fwrite(y, sizeof(double), N, outsignal);
-        fflush(outsignal);
-      }
       gettimeofday(&end,NULL);
       printf("%6f\t%6f\t%6f\t%6e\t\r",t/tmax,end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec), (end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec))/(t/tmax)*(1-t/tmax), maxerr);
       fprintf(out, "%f\t%f\t%f\t%6e\t\n",t/tmax,end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec), (end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec))/(t/tmax)*(1-t/tmax), maxerr);
@@ -328,15 +316,11 @@ int main (int argc, char* argv[]) {
   printf("runtime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
 
   //Output results
+  fflush(outsignal);
+  fclose(outsignal);
 
   if(verbose){
-    fflush(outphase);
-    fflush(outsignal);
-    fflush(outnoise);
     fflush(out);
-    fclose(outphase);
-    fclose(outsignal);
-    fclose(outnoise);
     fclose(out);
 
     printf("%f %f \n", order/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
@@ -355,6 +339,5 @@ int main (int argc, char* argv[]) {
   free(y);
   free(yerr);
   free(noise);
-  free(phase);
   return 0;
 }

@@ -81,7 +81,7 @@ int main (int argc, char* argv[]) {
   int correlated = 0;
   double t = 0.;
   double tmax = 1e3;
-  double ta = tmax;
+  double ta = 5e2;
   double to = 5e2;
   double dt = 1e-2;
   double dt2 = 1e-4;
@@ -219,7 +219,7 @@ int main (int argc, char* argv[]) {
   double *y, *yerr, *noise, *phase;
   gsl_rng *r = gsl_rng_alloc(gsl_rng_default);
 
-  FILE *out, *outsignal, *outnoise;
+  FILE *out, *outsignal;
   char file[1048576];
 
   y=calloc(2*N,sizeof(double));
@@ -237,19 +237,13 @@ int main (int argc, char* argv[]) {
   }
 
   //Open output files
+  strcpy(file,filebase);
+  strcat(file, ".dat");
+  outsignal=fopen(file,"w");
   if(verbose) {
-    strcpy(file,filebase);
-    strcat(file, "noise.dat");
-    outnoise=fopen(file,"w");
-
     strcpy(file,filebase);
     strcat(file, ".out");
     out=fopen(file,"w");
-
-    strcpy(file,filebase);
-    strcat(file, ".dat");
-    outsignal=fopen(file,"w");
-
     fprintf(out, "%i %f %f %f %f\n", N, tmax, dt, sigma, C);
 
     fprintf(out, "\n");
@@ -336,14 +330,11 @@ int main (int argc, char* argv[]) {
       }
     }
 
+    if(t > ta) {
+      fwrite(y, sizeof(double), 2*N, outsignal);
+      fflush(outsignal);
+    }
     if(verbose){
-      if(t > ta) {
-        fwrite(noise,sizeof(double), 2*N, outnoise);
-        fflush(outnoise);
-        fwrite(y, sizeof(double), 2*N, outsignal);
-        fflush(outsignal);
-      }
-
       gettimeofday(&end,NULL);
       printf("%6f\t%6f\t%6f\t%6e\t\r",t/tmax,end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec), (end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec))/(t/tmax)*(1-t/tmax), maxerr);
       fprintf(out, "%f\t%f\t%f\t%6e\t\n",t/tmax,end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec), (end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec))/(t/tmax)*(1-t/tmax), maxerr);
@@ -357,16 +348,13 @@ int main (int argc, char* argv[]) {
   printf("%f %f \n", order/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
 
   //Output results
+  fflush(outsignal);
+  fclose(outsignal);
+
   if(verbose) {
     fprintf(out, "\nruntime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
     fprintf(out, "%f %f \n", order/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
-
-    fflush(outsignal);
-    fflush(outnoise);
     fflush(out);
-
-    fclose(outsignal);
-    fclose(outnoise);
     fclose(out);
   }
 
