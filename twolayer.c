@@ -222,23 +222,21 @@ int main (int argc, char* argv[]) {
   strcpy(file,filebase);
   strcat(file, "frequencies.dat");
   outfrequencies=fopen(file,"w");
-  if(verbose){
-    strcpy(file,filebase);
-    strcat(file, ".out");
-    out=fopen(file,"w");
+  strcpy(file,filebase);
+  strcat(file, ".out");
+  out=fopen(file,"w");
 
-    fprintf(out, "%i %f %f %f %f %f\n", N, tmax-ta, dt, sigma, C, K);
-
-    fprintf(out, "\n");
+  fprintf(out, "%i %f %f %f %f %f\n", N, tmax-ta, dt, sigma, C, K);
+  for(int i=0; i<argc; i++){
+    fprintf(out,"%s ",argv[i]);
   }
-  fflush(stdout);
-
+  fprintf(out,"\n");
   for(j = 0; j<2+N; j++) {
     fprintf(outfrequencies, "%f ", omega[j]);
   }
   fflush(outfrequencies);
   fclose(outfrequencies);
-  
+
   //Set up integrator
   gsl_odeiv2_system sys = {func, NULL, 2+N, &params};
   gsl_odeiv2_step * step;
@@ -324,17 +322,15 @@ int main (int argc, char* argv[]) {
 
   gettimeofday(&end,NULL);
   printf("runtime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
+  printf("%f %f %f \n", order1/(Nt-Nto), order2/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
+  fprintf(out, "runtime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
+  fprintf(out, "%f %f %f \n", order1/(Nt-Nto), order2/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
 
   //Output results
   fflush(outsignal);
   fclose(outsignal);
-
-  if(verbose){
-    fflush(out);
-    fclose(out);
-
-    printf("%f %f %f \n", order1/(Nt-Nto), order2/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
-  }
+  fflush(out);
+  fclose(out);
 
   strcpy(file,filebase);
   strcat(file, "meanphase.dat");
