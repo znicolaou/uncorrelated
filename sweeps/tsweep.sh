@@ -1,5 +1,5 @@
 #! /bin/bash
-N=100
+N=500
 count=100
 jobs=100
 t1=6e2

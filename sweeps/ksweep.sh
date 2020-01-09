@@ -1,7 +1,7 @@
 #!/bin/bash
 ZGN_N=2
-ZGN_t1=1e3
-ZGN_t2=1e2
+ZGN_t1=1e5
+ZGN_t2=1e3
 ZGN_dt=1e-4
 ZGN_dt2=1e-5
 ZGN_Npoints=10
