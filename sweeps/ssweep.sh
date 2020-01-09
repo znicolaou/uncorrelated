@@ -17,14 +17,12 @@ ZGN_delta=`bc -l <<< "$ZGN_noisemax/$ZGN_Npoints*$ZGN_temp"`
 ./stuartlandau -C $ZGN_C -i $ZGN_delta -y 1  -t $ZGN_t1 -o $ZGN_t2 -D $ZGN_dt -d $ZGN_dt2 $filebase/uncorrelatedadd1 &
 ./stuartlandau -C $ZGN_C -i $ZGN_delta -y 1 -c -t $ZGN_t1  -o $ZGN_t2 -D $ZGN_dt -d $ZGN_dt2 $filebase/correlatedadd1 &
 done
-wait
 
 for ZGN_temp in `seq 0 $ZGN_Npoints`; do
 ZGN_delta=`bc -l <<< "$ZGN_noisemax/$ZGN_Npoints*$ZGN_temp"`
 ./stuartlandau -C $ZGN_C -i $ZGN_delta -y 2 -t $ZGN_t1  -o $ZGN_t2 -D $ZGN_dt -d $ZGN_dt2 $filebase/uncorrelatedadd2 &
 ./stuartlandau -C $ZGN_C -i $ZGN_delta -y 2 -c -t $ZGN_t1  -o $ZGN_t2 -D $ZGN_dt -d $ZGN_dt2 $filebase/correlatedadd2 &
 done
-wait
 
 for ZGN_temp in `seq 0 $ZGN_Npoints`; do
 ZGN_delta=`bc -l <<< "$ZGN_noisemax/$ZGN_Npoints*$ZGN_temp"`

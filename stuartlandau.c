@@ -350,17 +350,7 @@ int main (int argc, char* argv[]) {
   //Output results
   fflush(outsignal);
   fclose(outsignal);
-
-  if(verbose) {
-    fprintf(out, "\nruntime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
-    fprintf(out, "%f %f \n", order/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
-    fflush(out);
-    fclose(out);
-  }
-
-  strcpy(file,filebase);
-  strcat(file, "meanphase.dat");
-  out=fopen(file,"a+");
+  fprintf(out, "\nruntime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));  
   fprintf(out, "%i %f %f %i %f %f\n", N, C, sigma, seed, order/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
   fflush(out);
   fclose(out);

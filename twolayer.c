@@ -323,18 +323,11 @@ int main (int argc, char* argv[]) {
   gettimeofday(&end,NULL);
   printf("runtime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
   printf("%f %f %f \n", order1/(Nt-Nto), order2/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
-  fprintf(out, "runtime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
-  fprintf(out, "%f %f %f \n", order1/(Nt-Nto), order2/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
 
   //Output results
   fflush(outsignal);
   fclose(outsignal);
-  fflush(out);
-  fclose(out);
-
-  strcpy(file,filebase);
-  strcat(file, "meanphase.dat");
-  out=fopen(file,"a+");
+  fprintf(out, "runtime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
   fprintf(out, "%i %f %f %f %i %f %f %f\n", N, C, K, sigma, seed, order1/(Nt-Nto), order2/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
   fflush(out);
   fclose(out);
