@@ -243,7 +243,7 @@ int main (int argc, char* argv[]) {
   strcpy(file,filebase);
   strcat(file, ".out");
   out=fopen(file,"w");
-  fprintf(out, "%i %f %f %f %f\n", N, tmax, dt, sigma, C);
+  fprintf(out, "%i %f %f %f %f\n", N, tmax-ta, dt, sigma, C);
   for(int i=0; i<argc; i++){
     fprintf(out,"%s ",argv[i]);
   }
