@@ -1,5 +1,5 @@
 # Files in the uncorrelated repository
-This repository contains three C source files (kuramoto.c, stuartlandau.c, and twolayer.c), which simulate coupled oscillators, and three Mathematica notebooks (kuramoto.nb, stuartlandau.nb, and twolayer.nb), which plot results, and scripts for running batches.
+This repository contains three C source files (kuramoto.c, stuartlandau.c, and twolayer.c), which contain code to simulate coupled oscillators, and three Mathematica notebooks (kuramoto.nb, stuartlandau.nb, and twolayer.nb), which plot results, and scripts for running batches.
 # System requirements
 Compiling requires the gnu scientific library: https://www.gnu.org/software/gsl/.
 # Usage
@@ -25,7 +25,7 @@ optional arguments:
 	 -v, --verbose 		 Verbose output.
 	 -y, --type 		 Noise type. 0 for multiplicative gamma, 1 for additive constant phase sensitivity, 2 for additive trigonometric sensitivity. Default 1.
 positional arguments:
-filebase 		 Base file name for output. filebaseout.dat contains time step data, outlast.dat contains the last state, outanimation.dat contains the states after ta.
+	filebase 		 Base file name for output. filebaseout.dat contains time step data, outlast.dat contains the last state, outanimation.dat contains the states after ta.
 
 ```
 ___
