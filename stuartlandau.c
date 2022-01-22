@@ -9,7 +9,7 @@
 #include <gsl/gsl_randist.h>
 #include <getopt.h>
 
-struct parameters{int N; double *alpha; double* gamma; double C; double *noise; double noiseintensity; int noisetype; };
+struct parameters{int N; double *alpha; double* gamma; double C; double *noise; double *noiseout; double noiseintensity; int noisetype; };
 
 int func (double t, const double y[], double f[], void *params) {
 
@@ -19,6 +19,7 @@ int func (double t, const double y[], double f[], void *params) {
   double* gamma = ((struct parameters *)params)->gamma;
   double C = ((struct parameters *)params)->C;
   double *noise = ((struct parameters *)params)->noise;
+  double *noiseout = ((struct parameters *)params)->noiseout;
   ((struct parameters *)params)->noiseintensity = 0;
   int j, i;
 
@@ -36,18 +37,26 @@ int func (double t, const double y[], double f[], void *params) {
     //noise
     if(noisetype == 0){
       ((struct parameters *)params)->noiseintensity += pow((noise[j]-1.0),2.0)/N;
-      f[2*j] *= noise[j];
-      f[2*j+1] *= noise[j];
+      noiseout[2*j] = f[2*j]*(noise[j]-1);
+      noiseout[2*j+1] = f[2*j+1]*(noise[j]-1);
+      // f[2*j] *= noise[j];
+      // f[2*j+1] *= noise[j];
     }
     else if(noisetype == 1) {
       ((struct parameters *)params)->noiseintensity += pow(noise[j],2.0)/N;
-      f[2*j] += -y[2*j+1]*noise[j];
-      f[2*j+1] += y[2*j]*noise[j];
+      noiseout[2*j] = -y[2*j+1]*noise[j];
+      noiseout[2*j+1] = y[2*j]*noise[j];
+      // f[2*j] += -y[2*j+1]*noise[j];
+      // f[2*j+1] += y[2*j]*noise[j];
     }
     else{
       ((struct parameters *)params)->noiseintensity += pow(noise[j],2.0)/N;
-      f[2*j+1] += noise[j];
+      noiseout[2*j] = 0;
+      noiseout[2*j+1] = noise[j];
+      // f[2*j+1] += noise[j];
     }
+    f[2*j] += noiseout[2*j];
+    f[2*j+1] += noiseout[2*j+1];
 
   }
   return GSL_SUCCESS;
@@ -83,7 +92,7 @@ int main (int argc, char* argv[]) {
   double tmax = 1e3;
   double ta = 5e2;
   double to = 5e2;
-  double dt = 1e-2;
+  double dt = 1e-1;
   double dt2 = 1e-4;
   int seed = 1;
   char* filebase = NULL;
@@ -216,17 +225,18 @@ int main (int argc, char* argv[]) {
   int Nto = (int)to/dt;
   double order = 0;
   double netnoiseintensity = 0;
-  double *y, *yerr, *noise, *phase;
+  double *y, *yerr, *noise, *noiseout, *phase;
   gsl_rng *r = gsl_rng_alloc(gsl_rng_default);
 
-  FILE *out, *outsignal;
+  FILE *out, *outsignal, *outnoise, *outnoise2;
   char file[1048576];
 
   y=calloc(2*N,sizeof(double));
+  noiseout=calloc(2*N,sizeof(double));
   yerr=calloc(2*N,sizeof(double));
   noise=calloc(N,sizeof(double));
   phase=calloc(N,sizeof(double));
-  struct parameters params={N, alpha, gamma, C, noise, 0, noisetype};
+  struct parameters params={N, alpha, gamma, C, noise,noiseout, 0, noisetype};
 
   //create the random noise function.
   gsl_rng_set(r,seed);
@@ -240,6 +250,15 @@ int main (int argc, char* argv[]) {
   strcpy(file,filebase);
   strcat(file, ".dat");
   outsignal=fopen(file,"w");
+
+  strcpy(file,filebase);
+  strcat(file, "noise.dat");
+  outnoise=fopen(file,"w");
+
+  strcpy(file,filebase);
+  strcat(file, "noise2.dat");
+  outnoise2=fopen(file,"w");
+
   strcpy(file,filebase);
   strcat(file, ".out");
   out=fopen(file,"w");
@@ -329,7 +348,11 @@ int main (int argc, char* argv[]) {
 
     if(t > ta) {
       fwrite(y, sizeof(double), 2*N, outsignal);
+      fwrite(noiseout, sizeof(double), 2*N, outnoise);
+      fwrite(noise, sizeof(double), N, outnoise2);
       fflush(outsignal);
+      fflush(outnoise);
+      fflush(outnoise2);
     }
     if(verbose){
       gettimeofday(&end,NULL);
@@ -347,6 +370,10 @@ int main (int argc, char* argv[]) {
   //Output results
   fflush(outsignal);
   fclose(outsignal);
+  fflush(outnoise);
+  fclose(outnoise);
+  fflush(outnoise2);
+  fclose(outnoise2);
   fprintf(out, "\nruntime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
   fprintf(out, "%i %f %f %i %f %f\n", N, C, sigma, seed, order/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
   fflush(out);
@@ -358,6 +385,7 @@ int main (int argc, char* argv[]) {
   free(y);
   free(yerr);
   free(noise);
+  free(noiseout);
   free(phase);
   gsl_odeiv2_step_free(step);
   gsl_rng_free(r);

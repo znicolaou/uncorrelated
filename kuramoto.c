@@ -122,10 +122,10 @@ int main (int argc, char* argv[]) {
       correlated=1;
       break;
     case 'd':
-      dt2=atof(optarg);
+      dt=atof(optarg);
       break;
     case 'D':
-      dt=atof(optarg);
+      dt2=atof(optarg);
       break;
     case 'f':
       free(omega);
@@ -200,7 +200,7 @@ int main (int argc, char* argv[]) {
   double *y, *yerr, *noise;
   gsl_rng *r = gsl_rng_alloc(gsl_rng_default);
 
-  FILE *out, *outsignal;
+  FILE *out, *outsignal, *outnoise;
   char file[256];
 
   y=calloc(N,sizeof(double));
@@ -222,6 +222,9 @@ int main (int argc, char* argv[]) {
   strcpy(file,filebase);
   strcat(file, ".out");
   out=fopen(file,"w");
+  strcpy(file,filebase);
+  strcat(file, "noise.dat");
+  outnoise=fopen(file,"w");
   fprintf(out, "%i %f %f %f %f\n", N, tmax-ta, dt, sigma, C);
   for(int i=0; i<argc; i++){
     fprintf(out,"%s ",argv[i]);
@@ -241,38 +244,37 @@ int main (int argc, char* argv[]) {
     count++;
     maxerr=0;
 
-    if (noisetype==0) {
-      if(sigma == 0.0) {
-        for(j=0; j<N; j++) {
-          noise[j] = 1.0;
+    for(k=0; k<dt/dt2; k++) {
+      t=count*dt+k*dt2;
+      if (noisetype==0) {
+        if(sigma == 0.0) {
+          for(j=0; j<N; j++) {
+            noise[j] = 1.0;
+          }
+        }
+        else{
+          if(correlated==0) {
+            for(j=0; j<N; j++)
+            noise[j] = gsl_ran_gamma(r,2*dt2/(sigma*sigma), sigma*sigma/(2*dt2));
+          }
+          else {
+            double ran = gsl_ran_gamma(r,2*dt2/(sigma*sigma), sigma*sigma/(2*dt2));
+            for(j=0; j<N; j++)
+            noise[j] = ran;
+          }
         }
       }
-      else{
+      else {
         if(correlated==0) {
           for(j=0; j<N; j++)
-          noise[j] = gsl_ran_gamma(r,2*dt/(sigma*sigma), sigma*sigma/(2*dt));
+          noise[j] = gsl_ran_gaussian(r,sigma/sqrt(2*dt2));
         }
         else {
-          double ran = gsl_ran_gamma(r,2*dt/(sigma*sigma), sigma*sigma/(2*dt));
+          double ran = gsl_ran_gaussian(r,sigma/sqrt(2*dt2));
           for(j=0; j<N; j++)
           noise[j] = ran;
         }
       }
-    }
-    else {
-      if(correlated==0) {
-        for(j=0; j<N; j++)
-        noise[j] = gsl_ran_gaussian(r,sigma/sqrt(2*dt));
-      }
-      else {
-        double ran = gsl_ran_gaussian(r,sigma/sqrt(2*dt));
-        for(j=0; j<N; j++)
-        noise[j] = ran;
-      }
-    }
-
-    for(k=0; k<dt/dt2; k++) {
-      t=count*dt+k*dt2;
 
       gsl_odeiv2_step_apply (step, count*dt+k*dt2, dt2, y, yerr, NULL, NULL, &sys);
       for(j=0; j<N; j++) {
@@ -296,7 +298,9 @@ int main (int argc, char* argv[]) {
 
     if(t>ta){
       fwrite(y, sizeof(double), N, outsignal);
+      fwrite(noise, sizeof(double), N, outnoise);
       fflush(outsignal);
+      fflush(outnoise);
     }
     if(verbose){
       gettimeofday(&end,NULL);
@@ -314,6 +318,8 @@ int main (int argc, char* argv[]) {
   //Output results
   fflush(outsignal);
   fclose(outsignal);
+  fflush(outnoise);
+  fclose(outnoise);
   fprintf(out, "\nruntime: %6f\n",end.tv_sec-start.tv_sec + 1e-6*(end.tv_usec-start.tv_usec));
   fprintf(out, "%i %f %f %i %f %f\n", N, C, sigma, seed, order/(Nt-Nto), sqrt(netnoiseintensity*2*dt/Nt));
   fflush(out);
